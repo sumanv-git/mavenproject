@@ -1,4 +1,4 @@
-package com.tesco.service;
+package com.tesco.service.user;
 
 import com.tesco.model.User;
 

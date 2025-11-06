@@ -1,14 +1,15 @@
-package com.tesco.service;
+package com.tesco.service.user;
 
 import com.tesco.model.User;
 import com.tesco.repositories.UserRepository;
+import com.tesco.service.IdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
 
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
 
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 

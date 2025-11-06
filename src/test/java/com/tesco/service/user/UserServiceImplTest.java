@@ -1,15 +1,13 @@
-package com.tesco.service;
+package com.tesco.service.user;
 
 import com.tesco.model.User;
-import com.tesco.repositories.InMemoryUserRepositry;
 import com.tesco.repositories.UserRepository;
-import org.assertj.core.api.Assertions;
+import com.tesco.service.IdGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
