@@ -2,10 +2,15 @@ package com.tesco;
 
 import com.tesco.menu.OrderManagementMenu;
 import com.tesco.menu.UserManagementMenu;
+import com.tesco.repositories.InMemoryOrderRepository;
+import com.tesco.repositories.OrderRepository;
+import com.tesco.repositories.PostgresOrderRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
+import java.util.Scanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Scanner;
 
 public class App {
     private static final Logger logger = LoggerFactory.getLogger(App.class);
@@ -24,7 +29,10 @@ public class App {
 
             switch (choice) {
                 case 1 -> new UserManagementMenu(scanner).showMenu();
-                case 2 -> new OrderManagementMenu(scanner).showMenu();
+                case 2 -> {
+                    OrderRepository selectedRepo = chooseOrderRepository();
+                    new OrderManagementMenu(scanner, selectedRepo).showMenu();
+                }
                 case 3 -> {
                     logger.info("Exiting application...");
                     System.exit(0);
@@ -32,5 +40,31 @@ public class App {
                 default -> logger.warn("Invalid choice, please try again!");
             }
         }
+    }
+
+    private static OrderRepository chooseOrderRepository() {
+        logger.info("\nSelect Order Repository:");
+        logger.info("1. In-Memory Repository (No DB)");
+        logger.info("2. Postgres Repository (Requires DB)");
+        logger.info("Enter your choice: ");
+
+        int repoChoice = scanner.nextInt();
+        scanner.nextLine();
+
+        return switch (repoChoice) {
+            case 1 -> {
+                logger.info("Using InMemoryOrderRepository...");
+                yield new InMemoryOrderRepository();
+            }
+            case 2 -> {
+                EntityManagerFactory emf = Persistence.createEntityManagerFactory("tescoPU");
+                EntityManager em = emf.createEntityManager();
+                yield new PostgresOrderRepository(em);
+            }
+            default -> {
+                logger.warn("Invalid choice, defaulting to In-Memory Repository...");
+                yield new InMemoryOrderRepository();
+            }
+        };
     }
 }

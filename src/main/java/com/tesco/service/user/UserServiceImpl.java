@@ -3,11 +3,10 @@ package com.tesco.service.user;
 import com.tesco.model.User;
 import com.tesco.repositories.UserRepository;
 import com.tesco.service.IdGenerator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.List;
 import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UserServiceImpl implements UserService {
 
@@ -24,7 +23,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User addUser(User user) {
 
-        if(Objects.nonNull(user.getId())){
+        if (Objects.nonNull(user.getId())) {
             throw new RuntimeException("User id should not be null for new user");
         }
         user.setId(idGenerator.generateId());

@@ -1,24 +1,23 @@
 package com.tesco.menu;
 
 import com.tesco.model.Order;
-import com.tesco.repositories.InMemoryOrderRepository;
+import com.tesco.repositories.OrderRepository;
 import com.tesco.service.order.OrderService;
 import com.tesco.service.order.OrderServiceImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OrderManagementMenu implements MenuHandler {
     private static final Logger logger = LoggerFactory.getLogger(OrderManagementMenu.class);
     private final Scanner scanner;
     private final OrderService orderService;
 
-    public OrderManagementMenu(Scanner scanner) {
+    public OrderManagementMenu(Scanner scanner, OrderRepository orderRepository) {
         this.scanner = scanner;
-        this.orderService = new OrderServiceImpl(new InMemoryOrderRepository());
+        this.orderService = new OrderServiceImpl(orderRepository);
     }
 
     @Override
@@ -40,7 +39,9 @@ public class OrderManagementMenu implements MenuHandler {
                 case 2 -> viewOrders();
                 case 3 -> updateOrder();
                 case 4 -> deleteOrder();
-                case 5 -> { return; }
+                case 5 -> {
+                    return;
+                }
                 default -> logger.warn("Invalid choice, please try again!");
             }
         }
@@ -97,7 +98,7 @@ public class OrderManagementMenu implements MenuHandler {
             if (quantity >= 0) existingOrder.setQuantity(quantity);
             if (price >= 0) existingOrder.setPrice(price);
 
-            orderService.updateOrder(existingOrder.getId(),existingOrder);
+            orderService.updateOrder(existingOrder.getId(), existingOrder);
             logger.info("Order updated successfully: {}", existingOrder);
         } catch (IllegalArgumentException e) {
             logger.error("Invalid UUID format entered.");
@@ -122,4 +123,3 @@ public class OrderManagementMenu implements MenuHandler {
         }
     }
 }
-

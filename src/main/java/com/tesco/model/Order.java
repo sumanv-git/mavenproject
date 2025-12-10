@@ -1,20 +1,41 @@
 package com.tesco.model;
 
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Entity
+@Table(name = "orders")
 public class Order {
 
-    private final UUID id;
+    @Id
+    @Column(name = "id", nullable = false, unique = true)
+    private UUID id;
+
+    @Column(name = "customer_name", nullable = false)
     private String customerName;
+
+    @Column(name = "item_name", nullable = false)
     private String itemName;
+
     private int quantity;
     private double price;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
     private Status status;
+
+    @Column(name = "order_date", nullable = false)
     private LocalDateTime orderDate;
 
+    public Order() {}
+
     public enum Status {
-        NEW, PROCESSING, SHIPPED, DELIVERED, CANCELLED
+        NEW,
+        PROCESSING,
+        SHIPPED,
+        DELIVERED,
+        CANCELLED
     }
 
     public void setCustomerName(String customerName) {
@@ -47,26 +68,61 @@ public class Order {
         this.orderDate = LocalDateTime.now();
     }
 
-    public UUID getId() { return id; }
-    public String getCustomerName() { return customerName; }
-    public String getItemName() { return itemName; }
-    public int getQuantity() { return quantity; }
-    public double getPrice() { return price; }
-    public Status getStatus() { return status; }
-    public LocalDateTime getOrderDate() { return orderDate; }
+    public UUID getId() {
+        return id;
+    }
 
-    public void setStatus(Status status) { this.status = status; }
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public LocalDateTime getOrderDate() {
+        return orderDate;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
 
     @Override
     public String toString() {
-        return "Order{" +
-                "id=" + id +
-                ", customerName='" + customerName + '\'' +
-                ", itemName='" + itemName + '\'' +
-                ", quantity=" + quantity +
-                ", price=" + price +
-                ", status=" + status +
-                ", orderDate=" + orderDate +
-                '}';
+        return "Order{"
+                + "id="
+                + id
+                + ", customerName='"
+                + customerName
+                + '\''
+                + ", itemName='"
+                + itemName
+                + '\''
+                + ", quantity="
+                + quantity
+                + ", price="
+                + price
+                + ", status="
+                + status
+                + ", orderDate="
+                + orderDate
+                + '}';
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
     }
 }

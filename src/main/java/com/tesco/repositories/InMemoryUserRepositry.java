@@ -1,19 +1,19 @@
 package com.tesco.repositories;
 
 import com.tesco.model.User;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class InMemoryUserRepositry implements UserRepository{
+public class InMemoryUserRepositry implements UserRepository {
 
     private static final Logger logger = LoggerFactory.getLogger(InMemoryUserRepositry.class);
 
     private Map<String, User> userMap = new ConcurrentHashMap<>();
+
     @Override
     public User save(User user) {
         userMap.put(user.getId(), user);
@@ -22,7 +22,7 @@ public class InMemoryUserRepositry implements UserRepository{
 
     @Override
     public Optional<User> findById(String id) {
-        return  Optional.ofNullable(userMap.get(id));
+        return Optional.ofNullable(userMap.get(id));
     }
 
     @Override
@@ -42,7 +42,7 @@ public class InMemoryUserRepositry implements UserRepository{
 
     @Override
     public void updateUser(String id, User updatedUser) {
-        userMap.put(id,updatedUser);
+        userMap.put(id, updatedUser);
     }
 
     @Override
