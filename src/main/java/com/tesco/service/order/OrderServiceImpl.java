@@ -1,28 +1,30 @@
 package com.tesco.service.order;
 
 import com.tesco.model.Order;
-import com.tesco.repositories.InMemoryOrderRepository;
-
+import com.tesco.repositories.OrderRepository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public class OrderServiceImpl implements OrderService {
 
-    private final InMemoryOrderRepository orderRepository;
+    private final OrderRepository orderRepository;
 
-    public OrderServiceImpl(InMemoryOrderRepository orderRepository) {
+
+    public OrderServiceImpl(OrderRepository orderRepository) {
         this.orderRepository = orderRepository;
     }
 
     @Override
     public Order createOrder(Order order) {
         if (order.getId() == null) {
-            order = new Order(UUID.randomUUID(),
-                    order.getCustomerName(),
-                    order.getItemName(),
-                    order.getQuantity(),
-                    order.getPrice());
+            order =
+                    new Order(
+                            UUID.randomUUID(),
+                            order.getCustomerName(),
+                            order.getItemName(),
+                            order.getQuantity(),
+                            order.getPrice());
         }
         return orderRepository.save(order);
     }

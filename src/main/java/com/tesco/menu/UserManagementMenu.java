@@ -5,12 +5,11 @@ import com.tesco.repositories.InMemoryUserRepositry;
 import com.tesco.service.IdGenerator;
 import com.tesco.service.user.UserService;
 import com.tesco.service.user.UserServiceImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UserManagementMenu implements MenuHandler {
     private static final Logger logger = LoggerFactory.getLogger(UserManagementMenu.class);
@@ -41,7 +40,9 @@ public class UserManagementMenu implements MenuHandler {
                 case 2 -> viewUsers();
                 case 3 -> updateUser();
                 case 4 -> deleteUser();
-                case 5 -> { return; } // exit user menu, go back to App menu
+                case 5 -> {
+                    return;
+                } // exit user menu, go back to App menu
                 default -> logger.warn("Invalid choice, please try again!");
             }
         }
@@ -107,4 +108,3 @@ public class UserManagementMenu implements MenuHandler {
         }
     }
 }
-

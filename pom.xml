@@ -84,7 +84,29 @@
             <version>2.15.0</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>6.2.2.Final</version>
+        </dependency>
 
+        <dependency>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.6.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>jboss-logging</artifactId>
+            <version>3.5.0.Final</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -113,6 +135,33 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>2.43.0</version> <!-- Latest as of 2024 -->
+                <configuration>
+                    <java>
+                        <!-- Use Google's Java format -->
+                        <googleJavaFormat>
+                            <style>AOSP</style> <!-- Or GOOGLE -->
+                        </googleJavaFormat>
+                        <!-- Optional: Remove unused imports -->
+                        <removeUnusedImports />
+                        <!-- Optional: End files with newline -->
+                        <endWithNewline />
+                    </java>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <!-- Formats on mvn spotless:apply -->
+                            <goal>apply</goal>
+                            <!-- You can also use 'check' to fail the build if style violations exist -->
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 </project>

@@ -10,7 +10,7 @@ public class User {
     private String mobileNumber;
     private String email;
 
-    public User(){}
+    public User() {}
 
     public User(String username, String mobileNumber, String email) {
         this.username = username;
@@ -45,22 +45,27 @@ public class User {
         return email;
     }
 
-
-
     public void setEmail(String email) {
         this.email = email;
     }
 
     @Override
     public String toString() {
-        return "User{" +
-                "id='" + id + '\'' +
-                ", username='" + username + '\'' +
-                ", mobileNumber='" + mobileNumber + '\'' +
-                ", email='" + email + '\'' +
-                '}';
+        return "User{"
+                + "id='"
+                + id
+                + '\''
+                + ", username='"
+                + username
+                + '\''
+                + ", mobileNumber='"
+                + mobileNumber
+                + '\''
+                + ", email='"
+                + email
+                + '\''
+                + '}';
     }
-
 
     // Override equals() to compare users by username
     @Override
@@ -70,7 +75,6 @@ public class User {
         User user = (User) o;
         return Objects.equals(username, user.username); // Compare by username
     }
-
 
     public String getId() {
         return this.id;
