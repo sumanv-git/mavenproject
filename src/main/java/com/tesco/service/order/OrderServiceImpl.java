@@ -1,64 +1,117 @@
 package com.tesco.service.order;
 
-import com.tesco.model.Order;
-import com.tesco.repositories.OrderRepository;
+import com.tesco.dto.OrderDto;
+import com.tesco.entity.Order;
+import com.tesco.repositories.jpa.OrderJpaRepository;
+import com.tesco.service.IdGenerator;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
+import org.springframework.stereotype.Service;
 
+@Service
 public class OrderServiceImpl implements OrderService {
 
-    private final OrderRepository orderRepository;
+    private final OrderJpaRepository orderJpaRepository;
+    private final IdGenerator idGenerator;
 
-
-    public OrderServiceImpl(OrderRepository orderRepository) {
-        this.orderRepository = orderRepository;
+    public OrderServiceImpl(OrderJpaRepository orderJpaRepository, IdGenerator idGenerator) {
+        this.orderJpaRepository = orderJpaRepository;
+        this.idGenerator = idGenerator;
     }
 
     @Override
-    public Order createOrder(Order order) {
-        if (order.getId() == null) {
-            order =
-                    new Order(
-                            UUID.randomUUID(),
-                            order.getCustomerName(),
-                            order.getItemName(),
-                            order.getQuantity(),
-                            order.getPrice());
+    public OrderDto createOrder(OrderDto orderDto) {
+        Order order = toEntity(orderDto);
+        Order saved = orderJpaRepository.save(order);
+        return toDto(saved);
+    }
+
+    @Override
+    public OrderDto getOrder(UUID id) {
+        Order order =
+                orderJpaRepository
+                        .findById(id)
+                        .orElseThrow(() -> new IllegalArgumentException("Order not found: " + id));
+        return toDto(order);
+    }
+
+    @Override
+    public List<OrderDto> getAllOrders() {
+        return orderJpaRepository.findAll().stream().map(OrderServiceImpl::toDto).toList();
+    }
+
+    @Override
+    public OrderDto updateStatus(UUID id, String status) {
+        Order order =
+                orderJpaRepository
+                        .findById(id)
+                        .orElseThrow(() -> new IllegalArgumentException("Order not found: " + id));
+
+        order.setStatus(Order.Status.valueOf(status));
+        Order saved = orderJpaRepository.save(order);
+        return toDto(saved);
+    }
+
+    private static OrderDto toDto(Order order) {
+        return new OrderDto(
+                order.getId(),
+                order.getCustomerName(),
+                order.getItemName(),
+                order.getQuantity(),
+                order.getPrice(),
+                order.getStatus().name(),
+                order.getOrderDate());
+    }
+
+    private Order toEntity(OrderDto dto) {
+        Order order = new Order();
+        order.setId(UUID.fromString(idGenerator.generateId()));
+        order.setCustomerName(dto.getCustomerName());
+        order.setItemName(dto.getItemName());
+        order.setQuantity(dto.getQuantity());
+        order.setPrice(dto.getPrice());
+        if (dto.getStatus() != null) {
+            order.setStatus(Order.Status.valueOf(dto.getStatus()));
         }
-        return orderRepository.save(order);
+        order.setOrderDate(dto.getOrderDate());
+        return order;
     }
 
     @Override
-    public Order getOrder(UUID id) {
-        Optional<Order> existingOrder = orderRepository.findById(id);
-        return existingOrder.orElse(null);
-    }
+    public OrderDto updateOrder(UUID id, OrderDto updatedOrder) {
+        Order order =
+                orderJpaRepository
+                        .findById(id)
+                        .orElseThrow(() -> new IllegalArgumentException("Order not found: " + id));
 
-    @Override
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
-    }
-
-    @Override
-    public Order updateStatus(UUID id, Order.Status status) {
-        Optional<Order> existingOrder = orderRepository.findById(id);
-        if (existingOrder.isPresent()) {
-            Order order = existingOrder.get();
-            order.setStatus(status);
-            orderRepository.save(order);
-            return order;
+        if (updatedOrder.getCustomerName() != null) {
+            order.setCustomerName(updatedOrder.getCustomerName());
         }
-        return null;
+        if (updatedOrder.getItemName() != null) {
+            order.setItemName(updatedOrder.getItemName());
+        }
+        if (updatedOrder.getQuantity() != null) {
+            order.setQuantity(updatedOrder.getQuantity());
+        }
+        if (updatedOrder.getPrice() != null) {
+            order.setPrice(updatedOrder.getPrice());
+        }
+        if (updatedOrder.getStatus() != null) {
+            order.setStatus(Order.Status.valueOf(updatedOrder.getStatus()));
+        }
+        if (updatedOrder.getOrderDate() != null) {
+            order.setOrderDate(updatedOrder.getOrderDate());
+        }
+
+        Order saved = orderJpaRepository.save(order);
+        return toDto(saved);
     }
 
     @Override
     public void deleteOrder(UUID id) {
-        orderRepository.deleteById(id);
-    }
-
-    @Override
-    public void updateOrder(UUID id, Order updatedOrder) {
-        orderRepository.updateOrder(id, updatedOrder);
+        if (!orderJpaRepository.existsById(id)) {
+            throw new IllegalArgumentException("Order not found: " + id);
+        }
+        orderJpaRepository.deleteById(id);
     }
 }

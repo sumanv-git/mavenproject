@@ -3,8 +3,8 @@
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 
         <!-- Add all JPA entity classes here -->
-        <class>com.tesco.model.Order</class>
-        <class>com.tesco.model.User</class>
+        <class>com.tesco.entity.Order</class>
+        <class>com.tesco.entity.User</class>
 
         <properties>
             <!-- JDBC Config -->

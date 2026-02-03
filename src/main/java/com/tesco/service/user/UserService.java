@@ -1,18 +1,18 @@
 package com.tesco.service.user;
 
-import com.tesco.model.User;
+import com.tesco.dto.UserDto;
 import java.util.List;
 
 public interface UserService {
-    User addUser(User user);
+    UserDto createUser(UserDto userDto);
 
-    User getUser(String id);
+    UserDto getUser(String id);
 
-    List<User> getAllUsers();
+    List<UserDto> getAllUsers();
 
-    User findUserByName(String name);
+    UserDto getUserByName(String username);
 
-    void updateUser(String id, User updatedUser);
+    UserDto updateUser(String id, UserDto userDto);
 
     void deleteUser(String id);
 }

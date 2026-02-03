@@ -1,0 +1,23 @@
+meta {
+  name: Update Order (PUT)
+  type: http
+}
+
+put {
+  url: {{baseUrl}}/orders/{{orderId}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "customerName": "john",
+    "itemName": "iphone 15",
+    "quantity": 3,
+    "price": 1099.99,
+    "status": "SHIPPED",
+    "orderDate": "2026-01-30T10:05:00"
+  }
+}

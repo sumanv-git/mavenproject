@@ -1,19 +1,19 @@
 package com.tesco.service.order;
 
-import com.tesco.model.Order;
+import com.tesco.dto.OrderDto;
 import java.util.List;
 import java.util.UUID;
 
 public interface OrderService {
-    Order createOrder(Order order);
+    OrderDto createOrder(OrderDto orderDto);
 
-    Order getOrder(UUID id);
+    OrderDto getOrder(UUID id);
 
-    List<Order> getAllOrders();
+    List<OrderDto> getAllOrders();
 
-    Order updateStatus(UUID id, Order.Status status);
+    OrderDto updateStatus(UUID id, String status);
+
+    OrderDto updateOrder(UUID id, OrderDto updatedOrder);
 
     void deleteOrder(UUID id);
-
-    void updateOrder(UUID id, Order updatedOrder);
 }

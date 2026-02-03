@@ -1,21 +1,21 @@
 package com.tesco.repositories;
 
-import com.tesco.model.Order;
+import com.tesco.entity.Order;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Repository;
 
+@Primary
+@Repository
 @Transactional
 public class PostgresOrderRepository implements OrderRepository {
 
     @PersistenceContext private EntityManager em;
-
-    public PostgresOrderRepository(EntityManager em) {
-        this.em = em;
-    }
 
     @Override
     public Order save(Order order) {

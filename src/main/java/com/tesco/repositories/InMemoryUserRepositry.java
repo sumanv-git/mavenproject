@@ -1,13 +1,17 @@
 package com.tesco.repositories;
 
-import com.tesco.model.User;
+import com.tesco.entity.User;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Repository;
 
+@Primary
+@Repository
 public class InMemoryUserRepositry implements UserRepository {
 
     private static final Logger logger = LoggerFactory.getLogger(InMemoryUserRepositry.class);

@@ -1,11 +1,16 @@
 package com.tesco.service.order;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import com.tesco.model.Order;
-import com.tesco.repositories.InMemoryOrderRepository;
+import com.tesco.dto.OrderDto;
+import com.tesco.entity.Order;
+import com.tesco.repositories.jpa.OrderJpaRepository;
+import com.tesco.service.IdGenerator;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -15,111 +20,170 @@ import org.junit.jupiter.api.Test;
 
 class OrderServiceImplTest {
 
-    private InMemoryOrderRepository orderRepository;
+    private OrderJpaRepository orderJpaRepository;
+    private IdGenerator idGenerator;
     private OrderServiceImpl orderService;
 
-    private UUID ORDER_ID;
+    private UUID orderId;
     private Order order;
 
     @BeforeEach
     void setUp() {
-        orderRepository = mock(InMemoryOrderRepository.class);
-        orderService = new OrderServiceImpl(orderRepository);
+        orderJpaRepository = mock(OrderJpaRepository.class);
+        idGenerator = new IdGenerator();
+        orderService = new OrderServiceImpl(orderJpaRepository, idGenerator);
 
-        ORDER_ID = UUID.randomUUID();
-        order = new Order(ORDER_ID, "Alice", "Laptop", 1, 999.99);
+        orderId = UUID.randomUUID();
+        order =
+                new Order(
+                        orderId,
+                        "john",
+                        "iphone",
+                        2,
+                        new BigDecimal("999.99"),
+                        Order.Status.CREATED,
+                        LocalDateTime.now());
     }
 
     @Test
     void shouldCreateOrderSuccessfully() {
-        // given
-        when(orderRepository.save(any(Order.class))).thenReturn(order);
+        // Arrange
+        LocalDateTime orderDate = LocalDateTime.now();
+        OrderDto request =
+                new OrderDto(
+                        null, "john", "iphone", 2, new BigDecimal("999.99"), "CREATED", orderDate);
 
-        // when
-        Order createdOrder = orderService.createOrder(order);
+        when(orderJpaRepository.save(any(Order.class)))
+                .thenAnswer(
+                        invocation -> {
+                            Order toSave = invocation.getArgument(0);
+                            toSave.setId(orderId);
+                            return toSave;
+                        });
 
-        // then
-        assertThat(createdOrder).isSameAs(order);
-        verify(orderRepository, times(1)).save(order);
+        // Act
+        OrderDto created = orderService.createOrder(request);
+
+        // Assert
+        assertThat(created.getId()).isEqualTo(orderId);
+        assertThat(created.getCustomerName()).isEqualTo("john");
+        assertThat(created.getItemName()).isEqualTo("iphone");
+        assertThat(created.getQuantity()).isEqualTo(2);
+        assertThat(created.getPrice()).isEqualByComparingTo(new BigDecimal("999.99"));
+        assertThat(created.getStatus()).isEqualTo("CREATED");
+        assertThat(created.getOrderDate()).isEqualTo(orderDate);
+
+        verify(orderJpaRepository, times(1)).save(any(Order.class));
     }
 
     @Test
     void shouldGetOrderSuccessfully() {
-        // given
-        when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(order));
+        // Arrange
+        when(orderJpaRepository.findById(orderId)).thenReturn(Optional.of(order));
 
-        // when
-        Order foundOrder = orderService.getOrder(ORDER_ID);
+        // Act
+        OrderDto found = orderService.getOrder(orderId);
 
-        // then
-        assertThat(foundOrder).isSameAs(order);
-        verify(orderRepository, times(1)).findById(ORDER_ID);
+        // Assert
+        assertThat(found.getId()).isEqualTo(orderId);
+        assertThat(found.getCustomerName()).isEqualTo("john");
+        assertThat(found.getItemName()).isEqualTo("iphone");
+        assertThat(found.getQuantity()).isEqualTo(2);
+        assertThat(found.getPrice()).isEqualByComparingTo(new BigDecimal("999.99"));
+        assertThat(found.getStatus()).isEqualTo("CREATED");
+        verify(orderJpaRepository, times(1)).findById(orderId);
     }
 
     @Test
-    void shouldReturnNullIfOrderNotFound() {
-        // given
-        when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.empty());
+    void shouldThrowIfOrderNotFound() {
+        // Arrange
+        when(orderJpaRepository.findById(orderId)).thenReturn(Optional.empty());
 
-        // when
-        Order foundOrder = orderService.getOrder(ORDER_ID);
-
-        // then
-        assertThat(foundOrder).isNull();
-        verify(orderRepository, times(1)).findById(ORDER_ID);
+        // Act + Assert
+        assertThatThrownBy(() -> orderService.getOrder(orderId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Order not found");
+        verify(orderJpaRepository, times(1)).findById(orderId);
     }
 
     @Test
     void shouldGetAllOrdersSuccessfully() {
-        // given
-        Order order2 = new Order(UUID.randomUUID(), "Bob", "Phone", 2, 599.99);
-        List<Order> allOrders = Arrays.asList(order, order2);
-        when(orderRepository.findAll()).thenReturn(allOrders);
+        // Arrange
+        Order order2 =
+                new Order(
+                        UUID.randomUUID(),
+                        "mary",
+                        "ipad",
+                        1,
+                        new BigDecimal("499.00"),
+                        Order.Status.SHIPPED,
+                        LocalDateTime.now());
 
-        // when
-        List<Order> result = orderService.getAllOrders();
+        when(orderJpaRepository.findAll()).thenReturn(Arrays.asList(order, order2));
 
-        // then
-        assertThat(result).containsExactlyInAnyOrder(order, order2);
-        verify(orderRepository, times(1)).findAll();
+        // Act
+        List<OrderDto> result = orderService.getAllOrders();
+
+        // Assert
+        assertThat(result).hasSize(2);
+        verify(orderJpaRepository, times(1)).findAll();
     }
 
     @Test
     void shouldUpdateOrderStatusSuccessfully() {
-        // given
-        when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(order));
-        when(orderRepository.save(any(Order.class))).thenReturn(order);
+        // Arrange
+        when(orderJpaRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(orderJpaRepository.save(any(Order.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        // when
-        Order.Status newStatus = Order.Status.SHIPPED;
-        Order updatedOrder = orderService.updateStatus(ORDER_ID, newStatus);
+        // Act
+        OrderDto updated = orderService.updateStatus(orderId, "SHIPPED");
 
-        // then
-        assertThat(updatedOrder.getStatus()).isEqualTo(Order.Status.SHIPPED);
-        verify(orderRepository, times(1)).findById(ORDER_ID);
-        verify(orderRepository, times(1)).save(order);
+        // Assert
+        assertThat(updated.getId()).isEqualTo(orderId);
+        assertThat(updated.getStatus()).isEqualTo("SHIPPED");
+        verify(orderJpaRepository, times(1)).findById(orderId);
+        verify(orderJpaRepository, times(1)).save(order);
     }
 
     @Test
-    void shouldReturnNullWhenUpdatingStatusIfOrderNotFound() {
-        // given
-        when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.empty());
+    void shouldThrowWhenUpdatingStatusIfOrderNotFound() {
+        // Arrange
+        when(orderJpaRepository.findById(orderId)).thenReturn(Optional.empty());
 
-        // when
-        Order updatedOrder = orderService.updateStatus(ORDER_ID, Order.Status.SHIPPED);
+        // Act + Assert
+        assertThatThrownBy(() -> orderService.updateStatus(orderId, "SHIPPED"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Order not found");
 
-        // then
-        assertThat(updatedOrder).isNull();
-        verify(orderRepository, times(1)).findById(ORDER_ID);
-        verify(orderRepository, never()).save(any(Order.class));
+        verify(orderJpaRepository, times(1)).findById(orderId);
+        verify(orderJpaRepository, never()).save(any(Order.class));
     }
 
     @Test
     void shouldDeleteOrderSuccessfully() {
-        // when
-        orderService.deleteOrder(ORDER_ID);
+        // Arrange
+        when(orderJpaRepository.existsById(orderId)).thenReturn(true);
 
-        // then
-        verify(orderRepository, times(1)).deleteById(ORDER_ID);
+        // Act
+        orderService.deleteOrder(orderId);
+
+        // Assert
+        verify(orderJpaRepository, times(1)).existsById(orderId);
+        verify(orderJpaRepository, times(1)).deleteById(orderId);
+    }
+
+    @Test
+    void shouldThrowWhenDeletingMissingOrder() {
+        // Arrange
+        when(orderJpaRepository.existsById(orderId)).thenReturn(false);
+
+        // Act + Assert
+        assertThatThrownBy(() -> orderService.deleteOrder(orderId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Order not found");
+
+        verify(orderJpaRepository, times(1)).existsById(orderId);
+        verify(orderJpaRepository, never()).deleteById(any(UUID.class));
     }
 }

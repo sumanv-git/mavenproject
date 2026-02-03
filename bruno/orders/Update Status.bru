@@ -1,0 +1,12 @@
+meta {
+  name: Update Status
+  type: http
+}
+
+patch {
+  url: {{baseUrl}}/orders/{{orderId}}/status
+}
+
+query {
+  status: SHIPPED
+}
