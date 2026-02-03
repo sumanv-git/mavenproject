@@ -1,57 +1,82 @@
 package com.tesco.service.user;
 
-import com.tesco.model.User;
-import com.tesco.repositories.UserRepository;
-import com.tesco.service.IdGenerator;
+import com.tesco.dto.UserDto;
+import com.tesco.entity.User;
+import com.tesco.repositories.jpa.UserJpaRepository;
 import java.util.List;
-import java.util.Objects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
+@Service
 public class UserServiceImpl implements UserService {
 
-    private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
+    private final UserJpaRepository userJpaRepository;
 
-    private UserRepository userRepository;
-    private IdGenerator idGenerator;
-
-    public UserServiceImpl(UserRepository userRepository, IdGenerator idGenerator) {
-        this.userRepository = userRepository;
-        this.idGenerator = idGenerator;
+    public UserServiceImpl(UserJpaRepository userJpaRepository) {
+        this.userJpaRepository = userJpaRepository;
     }
 
     @Override
-    public User addUser(User user) {
+    public UserDto createUser(UserDto userDto) {
+        User user = toEntity(userDto);
+        User saved = userJpaRepository.save(user);
+        return toDto(saved);
+    }
 
-        if (Objects.nonNull(user.getId())) {
-            throw new RuntimeException("User id should not be null for new user");
+    @Override
+    public UserDto getUser(String id) {
+        User user =
+                userJpaRepository
+                        .findById(id)
+                        .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
+        return toDto(user);
+    }
+
+    @Override
+    public List<UserDto> getAllUsers() {
+        return userJpaRepository.findAll().stream().map(UserServiceImpl::toDto).toList();
+    }
+
+    @Override
+    public UserDto getUserByName(String username) {
+        User user =
+                userJpaRepository
+                        .findByUsername(username)
+                        .orElseThrow(
+                                () -> new IllegalArgumentException("User not found: " + username));
+        return toDto(user);
+    }
+
+    @Override
+    public UserDto updateUser(String id, UserDto userDto) {
+        User existing =
+                userJpaRepository
+                        .findById(id)
+                        .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
+
+        if (userDto.getUsername() != null) {
+            existing.setUsername(userDto.getUsername());
         }
-        user.setId(idGenerator.generateId());
-        return userRepository.save(user);
-    }
 
-    @Override
-    public User getUser(String id) {
-        return userRepository.findById(id).orElse(null);
-    }
-
-    @Override
-    public List<User> getAllUsers() {
-        return userRepository.getAllUsers();
-    }
-
-    @Override
-    public User findUserByName(String name) {
-        return userRepository.findUserByName(name);
-    }
-
-    @Override
-    public void updateUser(String id, User updatedUser) {
-        userRepository.updateUser(id, updatedUser);
+        User saved = userJpaRepository.save(existing);
+        return toDto(saved);
     }
 
     @Override
     public void deleteUser(String id) {
-        userRepository.deleteUser(id);
+        if (!userJpaRepository.existsById(id)) {
+            throw new IllegalArgumentException("User not found: " + id);
+        }
+        userJpaRepository.deleteById(id);
+    }
+
+    private static UserDto toDto(User user) {
+        return new UserDto(user.getId(), user.getUsername());
+    }
+
+    private static User toEntity(UserDto dto) {
+        User user = new User();
+        user.setId(dto.getId());
+        user.setUsername(dto.getUsername());
+        return user;
     }
 }

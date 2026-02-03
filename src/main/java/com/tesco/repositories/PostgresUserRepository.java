@@ -1,12 +1,14 @@
 package com.tesco.repositories;
 
-import com.tesco.model.User;
+import com.tesco.entity.User;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Repository;
 
+@Repository
 @Transactional
 public class PostgresUserRepository implements UserRepository {
 

@@ -1,145 +1,169 @@
 package com.tesco.service.user;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import com.tesco.model.User;
-import com.tesco.repositories.UserRepository;
-import com.tesco.service.IdGenerator;
+import com.tesco.dto.UserDto;
+import com.tesco.entity.User;
+import com.tesco.repositories.jpa.UserJpaRepository;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class UserServiceImplTest {
 
-    UserService userService;
+    private UserService userService;
 
-    UserRepository userRepository;
-
-    IdGenerator idGenerator;
-
-    private static final UUID USER_ID = UUID.randomUUID();
-
-    private static final User USER = new User("john", "1234567890", "john@example.com");
+    private UserJpaRepository userJpaRepository;
 
     @BeforeEach
     void setUp() {
-        userRepository = mock(UserRepository.class);
-        idGenerator = mock(IdGenerator.class);
-        userService = new UserServiceImpl(userRepository, idGenerator);
+        userJpaRepository = mock(UserJpaRepository.class);
+        userService = new UserServiceImpl(userJpaRepository);
     }
 
     @Test
-    void shouldSaveUserSuccessfully() {
+    void shouldCreateUserSuccessfully() {
         // Arrange
-        User user = new User();
-        String generatedId = "some-id";
+        UserDto request = new UserDto(null, "john");
+        User savedEntity = new User("john", "1234567890", "john@example.com");
+        savedEntity.setId("some-id");
 
-        when(idGenerator.generateId()).thenReturn(generatedId);
-        when(userRepository.save(any(User.class))).thenReturn(user);
+        when(userJpaRepository.save(any(User.class))).thenReturn(savedEntity);
 
         // Act
-        userService.addUser(user);
+        UserDto created = userService.createUser(request);
 
         // Assert
-        verify(userRepository, times(1)).save(user); // Ensure save() is called exactly once
-        verify(idGenerator, times(1)).generateId(); // Ensure ID is generated once
+        assertThat(created.getId()).isEqualTo("some-id");
+        assertThat(created.getUsername()).isEqualTo("john");
+        verify(userJpaRepository, times(1)).save(any(User.class));
     }
 
     @Test
-    void shouldFindUserByIdSuccessfully() {}
+    void shouldFindUserByIdSuccessfully() {
+        // Arrange
+        String id = "some-id";
+        User user = new User("john", "1234567890", "john@example.com");
+        user.setId(id);
+
+        when(userJpaRepository.findById(id)).thenReturn(Optional.of(user));
+
+        // Act
+        UserDto found = userService.getUser(id);
+
+        // Assert
+        assertThat(found.getId()).isEqualTo(id);
+        assertThat(found.getUsername()).isEqualTo("john");
+        verify(userJpaRepository, times(1)).findById(id);
+    }
 
     @Test
-    void ShouldSaveUser() {
-        // given
-        when(idGenerator.generateId()).thenReturn(String.valueOf(USER_ID));
-        when(userRepository.save(any(User.class))).thenReturn(USER);
-        // when
-        var savedUser = userService.addUser(USER);
-        // then
-        assertThat(savedUser).isSameAs(USER);
+    void shouldThrowWhenUserNotFoundById() {
+        // Arrange
+        String id = "missing";
+        when(userJpaRepository.findById(id)).thenReturn(Optional.empty());
+
+        // Act + Assert
+        assertThatThrownBy(() -> userService.getUser(id))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("User not found");
+        verify(userJpaRepository, times(1)).findById(id);
     }
 
     @Test
     void shouldFindUserByNameSuccessfully() {
-        // given
-        when(userRepository.findUserByName(USER.getUsername())).thenReturn(USER);
+        // Arrange
+        User user = new User("john", "1234567890", "john@example.com");
+        user.setId("some-id");
+        when(userJpaRepository.findByUsername("john")).thenReturn(Optional.of(user));
 
-        // when
-        var foundUser = userService.findUserByName(USER.getUsername());
+        // Act
+        UserDto found = userService.getUserByName("john");
 
-        // then
-        assertThat(foundUser).isSameAs(USER);
+        // Assert
+        assertThat(found.getUsername()).isEqualTo("john");
+        assertThat(found.getId()).isEqualTo("some-id");
+        verify(userJpaRepository, times(1)).findByUsername("john");
     }
 
     @Test
     void shouldDeleteUserSuccessfully() {
-        // given
-        doNothing().when(userRepository).deleteUser(anyString());
+        // Arrange
+        String id = "some-id";
+        when(userJpaRepository.existsById(id)).thenReturn(true);
 
-        // when
-        userService.deleteUser(USER_ID.toString());
+        // Act
+        userService.deleteUser(id);
 
-        // then
-        verify(userRepository, times(1)).deleteUser(USER_ID.toString());
+        // Assert
+        verify(userJpaRepository, times(1)).existsById(id);
+        verify(userJpaRepository, times(1)).deleteById(id);
+    }
+
+    @Test
+    void shouldThrowWhenDeletingMissingUser() {
+        // Arrange
+        String id = "missing";
+        when(userJpaRepository.existsById(id)).thenReturn(false);
+
+        // Act + Assert
+        assertThatThrownBy(() -> userService.deleteUser(id))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("User not found");
+
+        verify(userJpaRepository, times(1)).existsById(id);
+        verify(userJpaRepository, never()).deleteById(anyString());
     }
 
     @Test
     void shouldUpdateUserSuccessfully() {
-        // given
-        User updatedUser = new User("john_updated", "1234567890", "john_updated@example.com");
-        doNothing().when(userRepository).updateUser(anyString(), any(User.class));
+        // Arrange
+        String id = "some-id";
+        User existing = new User("john", "1234567890", "john@example.com");
+        existing.setId(id);
 
-        // when
-        userService.updateUser(USER_ID.toString(), updatedUser);
+        when(userJpaRepository.findById(id)).thenReturn(Optional.of(existing));
+        when(userJpaRepository.save(any(User.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        // then
-        verify(userRepository, times(1)).updateUser(USER_ID.toString(), updatedUser);
-    }
+        UserDto update = new UserDto(null, "john_updated");
 
-    @Test
-    void shouldUpdateUserWithAssert() {
-        // Given
-        String userId = "12345"; // Mocked user ID
-        when(idGenerator.generateId()).thenReturn(userId); // Corrected order
+        // Act
+        UserDto updated = userService.updateUser(id, update);
 
-        User existingUser = new User("john", "1234567890", "john@example.com");
-        existingUser.setId(userId);
-        userRepository.save(existingUser);
+        // Assert
+        assertThat(updated.getId()).isEqualTo(id);
+        assertThat(updated.getUsername()).isEqualTo("john_updated");
 
-        User updatedUser = new User("john_updated", "0987654321", "john_updated@example.com");
-        updatedUser.setId(userId);
-
-        // When
-        userService.updateUser(userId, updatedUser);
-
-        // Then
-        // verify(userRepository, times(1)).updateUser(eq(userId), any(User.class));  // Ensures
-        // updateUser() was called
-        User retrievedUser = userService.getUser(userId);
-
-        // Assertions
-        assertThat(retrievedUser).isNotNull();
-        assertThat(retrievedUser.getUsername()).isEqualTo("john_updated");
-        assertThat(retrievedUser.getMobileNumber()).isEqualTo("0987654321");
-        assertThat(retrievedUser.getEmail()).isEqualTo("john_updated@example.com");
+        verify(userJpaRepository, times(1)).findById(id);
+        verify(userJpaRepository, times(1)).save(existing);
     }
 
     @Test
     void shouldGetAllUsersSuccessfully() {
-        // given
+        // Arrange
         User user1 = new User("john1", "1234567890", "john1@example.com");
+        user1.setId("1");
         User user2 = new User("john2", "0987654321", "john2@example.com");
-        List<User> users = Arrays.asList(user1, user2);
-        when(userRepository.getAllUsers()).thenReturn(users);
+        user2.setId("2");
 
-        // when
-        var allUsers = userService.getAllUsers();
+        when(userJpaRepository.findAll()).thenReturn(Arrays.asList(user1, user2));
 
-        // then
-        assertThat(allUsers).containsExactlyInAnyOrder(user1, user2);
+        // Act
+        List<UserDto> allUsers = userService.getAllUsers();
+
+        // Assert
+        assertThat(allUsers).hasSize(2);
+        assertThat(allUsers.stream().map(UserDto::getId).toList())
+                .containsExactlyInAnyOrder("1", "2");
+        assertThat(allUsers.stream().map(UserDto::getUsername).toList())
+                .containsExactlyInAnyOrder("john1", "john2");
+
+        verify(userJpaRepository, times(1)).findAll();
     }
 }

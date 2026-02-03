@@ -1,6 +1,6 @@
 package com.tesco.repositories;
 
-import com.tesco.model.User;
+import com.tesco.entity.User;
 import java.util.List;
 import java.util.Optional;
 

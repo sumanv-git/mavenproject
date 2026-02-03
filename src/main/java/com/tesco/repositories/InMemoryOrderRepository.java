@@ -1,8 +1,10 @@
 package com.tesco.repositories;
 
-import com.tesco.model.Order;
+import com.tesco.entity.Order;
 import java.util.*;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public class InMemoryOrderRepository implements OrderRepository {
     private final Map<UUID, Order> store = new HashMap<>();
 

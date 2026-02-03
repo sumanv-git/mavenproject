@@ -1,6 +1,6 @@
 package com.tesco.repositories;
 
-import com.tesco.model.Order;
+import com.tesco.entity.Order;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
