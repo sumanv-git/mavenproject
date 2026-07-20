@@ -4,7 +4,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -22,6 +25,10 @@ public class Order {
     }
 
     @Id private UUID id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(name = "customer_name", nullable = false)
     private String customerName;
@@ -46,6 +53,7 @@ public class Order {
 
     public Order(
             UUID id,
+            User user,
             String customerName,
             String itemName,
             Integer quantity,
@@ -53,6 +61,7 @@ public class Order {
             Status status,
             LocalDateTime orderDate) {
         this.id = id;
+        this.user = user;
         this.customerName = customerName;
         this.itemName = itemName;
         this.quantity = quantity;
@@ -67,6 +76,14 @@ public class Order {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public String getCustomerName() {
